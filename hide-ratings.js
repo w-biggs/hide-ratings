@@ -83,15 +83,21 @@ const setupHideButton = function setupHideButton(button) {
 
     if (button.getAttribute('hiding') === 'true') {
       fireShowEvent();
-      button.setAttribute('hiding', 'false');
-      // eslint-disable-next-line no-param-reassign
-      button.innerText = 'Hide Ratings';
     } else {
       fireHideEvent();
-      button.setAttribute('hiding', 'true');
-      // eslint-disable-next-line no-param-reassign
-      button.innerText = 'Show Ratings';
     }
+  });
+
+  document.addEventListener('hideRatings', () => {
+    button.setAttribute('hiding', 'true');
+    // eslint-disable-next-line no-param-reassign
+    button.innerText = 'Show Ratings';
+  });
+
+  document.addEventListener('showRatings', () => {
+    button.setAttribute('hiding', 'false');
+    // eslint-disable-next-line no-param-reassign
+    button.innerText = 'Hide Ratings';
   });
 };
 
@@ -131,6 +137,7 @@ const setupReleaseListeners = function setupReleaseListeners() {
         hidden.classList.add('tm-hidden-rating');
       }
     });
+    window.hidingRatings = true;
   });
 
   document.addEventListener('showRatings', () => {
@@ -140,6 +147,7 @@ const setupReleaseListeners = function setupReleaseListeners() {
         hidden.classList.remove('tm-hidden-rating');
       }
     });
+    window.hidingRatings = false;
   });
 };
 
@@ -202,6 +210,7 @@ const setupProfileListeners = function setupProfileListeners() {
         hidden.classList.add('tm-hidden-rating');
       }
     });
+    window.hidingRatings = true;
   });
 
   document.addEventListener('showRatings', () => {
@@ -211,6 +220,21 @@ const setupProfileListeners = function setupProfileListeners() {
         hidden.classList.remove('tm-hidden-rating');
       }
     });
+    window.hidingRatings = false;
+  });
+
+  const discography = document.querySelector('.section_artist_discography');
+  const discogObserver = new MutationObserver(() => {
+    if (window.hidingRatings) {
+      fireShowEvent();
+    } else {
+      fireHideEvent();
+    }
+  });
+  discogObserver.observe(discography, {
+    childList: true,
+    subtree: true,
+    attributes: false,
   });
 };
 

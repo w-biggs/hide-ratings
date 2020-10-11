@@ -5,7 +5,9 @@
 // @description  Hides RYM ratings if you haven't rated them - unless you click a button.
 // @author       w_biggs (~joks)
 // @match        https://rateyourmusic.com/artist/*
+// @match        https://rateyourmusic.com/films/*
 // @match        https://rateyourmusic.com/release/*
+// @match        https://rateyourmusic.com/film/*
 // @run-at       document-start
 // ==/UserScript==
 
@@ -14,7 +16,7 @@
  */
 const getPageType = function getPageType() {
   const typeMeta = document.querySelector('meta[property="og:type"]');
-  if (typeMeta.getAttribute('content') === 'music.album') {
+  if (!typeMeta || typeMeta.getAttribute('content') === 'music.album') {
     console.log('is release!');
     return 'release';
   }
@@ -187,7 +189,7 @@ const setupReleasePage = function setupReleasePage() {
 const getProfileHideable = function getProfileHideable() {
   const hideable = [];
 
-  const releases = document.querySelectorAll('.disco_release');
+  const releases = document.querySelectorAll('.disco_release, ul.films > li');
   releases.forEach((release) => {
     const rating = release.querySelector('.disco_cat_inner');
     if (!rating || !parseFloat(rating.innerText)) {
@@ -223,7 +225,21 @@ const setupProfileListeners = function setupProfileListeners() {
     window.hidingRatings = false;
   });
 
-  const discography = document.querySelector('.section_artist_discography');
+  const discogClasses = [
+    '.section_artist_discography',
+    '.section_artist_credits',
+    '.section_artist_filmography',
+  ];
+
+  let discography = false;
+  for (let i = 0; i < discogClasses.length; i += 1) {
+    const discogClass = discogClasses[i];
+    discography = document.querySelector(discogClass);
+    if (discography) {
+      break;
+    }
+  }
+
   const discogObserver = new MutationObserver(() => {
     if (window.hidingRatings) {
       fireShowEvent();

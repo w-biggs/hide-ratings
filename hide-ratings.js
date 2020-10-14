@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Hide RYM Ratings If Unrated
 // @namespace    http://tampermonkey.net/
-// @version      0.2.1
+// @version      0.2.2
 // @description  Hides RYM ratings if you haven't rated them - unless you click a button.
 // @author       w_biggs (~joks)
 // @match        https://rateyourmusic.com/artist/*

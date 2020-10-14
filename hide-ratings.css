@@ -1,7 +1,0 @@
-body:not(.hide-ratings-loaded) .avg_rating,
-body:not(.hide-ratings-loaded) .avg_rating_friends,
-body:not(.hide-ratings-loaded) .track_rating,
-body:not(.hide-ratings-loaded) .disco_avg_rating,
-.tm-hidden-rating {
-  opacity: 0 !important;
-}

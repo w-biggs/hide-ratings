@@ -1,14 +1,13 @@
 // ==UserScript==
 // @name         Hide RYM Ratings If Unrated
 // @namespace    http://tampermonkey.net/
-// @version      0.2.2
+// @version      0.2.1
 // @description  Hides RYM ratings if you haven't rated them - unless you click a button.
 // @author       w_biggs (~joks)
 // @match        https://rateyourmusic.com/artist/*
 // @match        https://rateyourmusic.com/films/*
 // @match        https://rateyourmusic.com/release/*
 // @match        https://rateyourmusic.com/film/*
-// @resource     hideStyles https://raw.githubusercontent.com/w-biggs/hide-ratings/master/hide-ratings.css
 // @run-at       document-start
 // ==/UserScript==
 
@@ -28,6 +27,34 @@ const getPageType = function getPageType() {
     default:
       return false;
   }
+};
+
+/**
+ * Sets up the initial styles that hide ratings, preventing a flash of ratings you don't want to
+ * see on load.
+ * @param {String} pageType What type of page we're on.
+ */
+const setupInitHideStyles = function setupInitHideStyles(pageType) {
+  const styleEl = document.createElement('style');
+  styleEl.id = 'initial-hide-styles';
+  if (pageType === 'release') {
+    styleEl.innerText = '.avg_rating, .avg_rating_friends, .track_rating { opacity: 0 !important; }';
+  } else if (pageType === 'profile') {
+    styleEl.innerText = '.disco_avg_rating { opacity: 0 !important; }';
+  }
+  document.documentElement.appendChild(styleEl);
+  return styleEl;
+};
+
+/**
+ * Sets up the styles that hide hidden ratings.
+ */
+const setupHideStyles = function setupHideStyles() {
+  const styleEl = document.createElement('style');
+  styleEl.id = 'initial-hide-styles';
+  styleEl.innerText = '.tm-hidden-rating { opacity: 0 !important; }';
+  document.head.appendChild(styleEl);
+  return styleEl;
 };
 
 /**
@@ -270,8 +297,11 @@ const setupProfilePage = function setupProfilePage() {
 const pageType = getPageType();
 
 if (pageType) {
+  const initStyleEl = setupInitHideStyles(pageType);
+
   document.addEventListener('DOMContentLoaded', () => {
-    document.body.classList.add('hide-ratings-loaded');
+    initStyleEl.remove();
+    setupHideStyles();
     if (pageType === 'release') {
       setupReleasePage();
     } else if (pageType === 'profile') {

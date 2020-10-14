@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Hide RYM Ratings If Unrated
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.2.1
 // @description  Hides RYM ratings if you haven't rated them - unless you click a button.
 // @author       w_biggs (~joks)
 // @match        https://rateyourmusic.com/artist/*
@@ -15,44 +15,18 @@
  * Get what type of page we're on.
  */
 const getPageType = function getPageType() {
-  const typeMeta = document.querySelector('meta[property="og:type"]');
-  if (!typeMeta || typeMeta.getAttribute('content') === 'music.album') {
-    console.log('is release!');
-    return 'release';
+  // should always be length 2 at least thanks to @match
+  const splitPath = window.location.pathname.split('/');
+  switch (splitPath[1]) {
+    case 'artist':
+    case 'films':
+      return 'profile';
+    case 'release':
+    case 'film':
+      return 'release';
+    default:
+      return false;
   }
-  if (typeMeta.getAttribute('content') === 'profile') {
-    console.log('is profile!');
-    return 'profile';
-  }
-  return false;
-};
-
-/**
- * Sets up the initial styles that hide ratings, preventing a flash of ratings you don't want to
- * see on load.
- * @param {String} pageType What type of page we're on.
- */
-const setupInitHideStyles = function setupInitHideStyles(pageType) {
-  const styleEl = document.createElement('style');
-  styleEl.id = 'initial-hide-styles';
-  if (pageType === 'release') {
-    styleEl.innerText = '.avg_rating, .avg_rating_friends, .track_rating { opacity: 0 !important; }';
-  } else if (pageType === 'profile') {
-    styleEl.innerText = '.disco_avg_rating { opacity: 0 !important; }';
-  }
-  document.head.appendChild(styleEl);
-  return styleEl;
-};
-
-/**
- * Sets up the styles that hide hidden ratings.
- */
-const setupHideStyles = function setupHideStyles() {
-  const styleEl = document.createElement('style');
-  styleEl.id = 'initial-hide-styles';
-  styleEl.innerText = '.tm-hidden-rating { opacity: 0 !important; }';
-  document.head.appendChild(styleEl);
-  return styleEl;
 };
 
 /**
@@ -295,11 +269,8 @@ const setupProfilePage = function setupProfilePage() {
 const pageType = getPageType();
 
 if (pageType) {
-  const initStyleEl = setupInitHideStyles(pageType);
-
   document.addEventListener('DOMContentLoaded', () => {
-    initStyleEl.remove();
-    setupHideStyles();
+    document.body.classList.add('hide-ratings-loaded');
     if (pageType === 'release') {
       setupReleasePage();
     } else if (pageType === 'profile') {

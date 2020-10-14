@@ -8,6 +8,7 @@
 // @match        https://rateyourmusic.com/films/*
 // @match        https://rateyourmusic.com/release/*
 // @match        https://rateyourmusic.com/film/*
+// @resource     hideStyles https://raw.githubusercontent.com/w-biggs/hide-ratings/master/hide-ratings.css
 // @run-at       document-start
 // ==/UserScript==
 

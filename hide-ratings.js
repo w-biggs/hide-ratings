@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Hide RYM Ratings If Unrated
 // @namespace    http://tampermonkey.net/
-// @version      0.2.2
+// @version      0.3
 // @description  Hides RYM ratings if you haven't rated them - unless you click a button.
 // @author       w_biggs (~joks)
 // @match        https://rateyourmusic.com/artist/*
@@ -38,6 +38,7 @@ const setupHideStyles = function setupHideStyles() {
   const selectors = [
     '.avg_rating',
     '.avg_rating_friends',
+    '.tr-ranking',
     '.track_rating',
     '.disco_avg_rating:not(.tm-visible)',
     '.review_rating',
@@ -150,6 +151,16 @@ const setupReleasePage = function setupReleasePage() {
   // Check whether this is a page where ratings should be hidden
   const ratingNum = document.querySelector('.my_catalog_rating > .rating_num');
   if (ratingNum.innerText === '---') {
+    // add class to ratings <tr> so it can be hidden
+    const infoRows = Array.from(document.querySelectorAll('.album_info > tbody > tr'));
+    infoRows.some((infoRow) => {
+      const rowHead = infoRow.querySelector('th.info_hdr');
+      if (rowHead.innerText === 'Ranked') {
+        infoRow.classList.add('tr-ranking');
+        return true;
+      }
+      return false;
+    });
     fireHideEvent();
     createReleaseHideButton();
   }

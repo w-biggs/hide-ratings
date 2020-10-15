@@ -30,31 +30,18 @@ const getPageType = function getPageType() {
 };
 
 /**
- * Sets up the initial styles that hide ratings, preventing a flash of ratings you don't want to
- * see on load.
- * @param {String} pageType What type of page we're on.
- */
-const setupInitHideStyles = function setupInitHideStyles(pageType) {
-  const styleEl = document.createElement('style');
-  styleEl.id = 'initial-hide-styles';
-  if (pageType === 'release') {
-    styleEl.innerText = '.avg_rating, .avg_rating_friends, .track_rating { opacity: 0 !important; }';
-  } else if (pageType === 'profile') {
-    styleEl.innerText = '.disco_avg_rating { opacity: 0 !important; }';
-  }
-  document.documentElement.appendChild(styleEl);
-  return styleEl;
-};
-
-/**
- * Sets up the styles that hide hidden ratings.
+ * Sets up the styles for hiding ratings.
  */
 const setupHideStyles = function setupHideStyles() {
   const styleEl = document.createElement('style');
   styleEl.id = 'initial-hide-styles';
-  styleEl.innerText = '.tm-hidden-rating { opacity: 0 !important; }';
-  document.head.appendChild(styleEl);
-  return styleEl;
+  styleEl.innerText = `body:not(.ratings-visible) .avg_rating,
+  body:not(.ratings-visible) .avg_rating_friends,
+  body:not(.ratings-visible) .track_rating,
+  body:not(.ratings-visible) .disco_avg_rating:not(.tm-visible) {
+    opacity: 0 !important;
+  }`;
+  document.documentElement.appendChild(styleEl);
 };
 
 /**
@@ -106,52 +93,15 @@ const setupHideButton = function setupHideButton(button) {
 };
 
 /**
- * Gets the hideable events on release pages.
+ * Sets up the listener for hide/show events.
  */
-const getReleaseHideable = function getReleaseHideable() {
-  const hideable = [];
-  hideable.push(document.querySelector('.avg_rating'));
-  hideable.push(document.querySelector('.avg_rating_friends'));
-
-  // 'ranked'
-  const infoRows = document.querySelectorAll('.album_info > tbody > tr');
-  infoRows.forEach((infoRow) => {
-    const rowHead = infoRow.querySelector('th.info_hdr');
-    if (rowHead.innerText === 'Ranked') {
-      hideable.push(infoRow);
-    }
-  });
-
-  const trackRatings = document.querySelectorAll('.track_rating');
-  trackRatings.forEach((trackRating) => {
-    hideable.push(trackRating);
-  });
-  
-  return hideable;
-};
-
-/**
- * Sets up the listener for hide/show events on release pages.
- */
-const setupReleaseListeners = function setupReleaseListeners() {
+const setupListeners = function setupListeners() {
   document.addEventListener('hideRatings', () => {
-    const hideable = getReleaseHideable();
-    hideable.forEach((hidden) => {
-      if (hidden) {
-        hidden.classList.add('tm-hidden-rating');
-      }
-    });
-    window.hidingRatings = true;
+    document.body.classList.remove('ratings-visible');
   });
 
   document.addEventListener('showRatings', () => {
-    const hideable = getReleaseHideable();
-    hideable.forEach((hidden) => {
-      if (hidden) {
-        hidden.classList.remove('tm-hidden-rating');
-      }
-    });
-    window.hidingRatings = false;
+    document.body.classList.add('ratings-visible');
   });
 };
 
@@ -179,7 +129,6 @@ const setupReleasePage = function setupReleasePage() {
   // Check whether this is a page where ratings should be hidden
   const ratingNum = document.querySelector('.my_catalog_rating > .rating_num');
   if (ratingNum.innerText === '---') {
-    setupReleaseListeners();
     fireHideEvent();
     createReleaseHideButton();
   }
@@ -194,9 +143,11 @@ const getProfileHideable = function getProfileHideable() {
   const releases = document.querySelectorAll('.disco_release, ul.films > li');
   releases.forEach((release) => {
     const rating = release.querySelector('.disco_cat_inner');
+    const releaseAvg = release.querySelector('.disco_avg_rating');
     if (!rating || !parseFloat(rating.innerText)) {
-      const releaseAvg = release.querySelector('.disco_avg_rating');
       hideable.push(releaseAvg);
+    } else {
+      releaseAvg.classList.add('tm-visible');
     }
   });
 
@@ -211,20 +162,18 @@ const setupProfileListeners = function setupProfileListeners() {
     const hideable = getProfileHideable();
     hideable.forEach((hidden) => {
       if (hidden) {
-        hidden.classList.add('tm-hidden-rating');
+        hidden.classList.remove('tm-visible');
       }
     });
-    window.hidingRatings = true;
   });
 
   document.addEventListener('showRatings', () => {
     const hideable = getProfileHideable();
     hideable.forEach((hidden) => {
       if (hidden) {
-        hidden.classList.remove('tm-hidden-rating');
+        hidden.classList.add('tm-visible');
       }
     });
-    window.hidingRatings = false;
   });
 
   const discogClasses = [
@@ -243,10 +192,10 @@ const setupProfileListeners = function setupProfileListeners() {
   }
 
   const discogObserver = new MutationObserver(() => {
-    if (window.hidingRatings) {
-      fireShowEvent();
-    } else {
+    if (document.body.classList.contains('ratings-visible')) {
       fireHideEvent();
+    } else {
+      fireShowEvent();
     }
   });
   discogObserver.observe(discography, {
@@ -297,11 +246,10 @@ const setupProfilePage = function setupProfilePage() {
 const pageType = getPageType();
 
 if (pageType) {
-  const initStyleEl = setupInitHideStyles(pageType);
+  setupHideStyles(pageType);
 
   document.addEventListener('DOMContentLoaded', () => {
-    initStyleEl.remove();
-    setupHideStyles();
+    setupListeners();
     if (pageType === 'release') {
       setupReleasePage();
     } else if (pageType === 'profile') {

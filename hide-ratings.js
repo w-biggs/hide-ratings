@@ -35,12 +35,33 @@ const getPageType = function getPageType() {
 const setupHideStyles = function setupHideStyles() {
   const styleEl = document.createElement('style');
   styleEl.id = 'initial-hide-styles';
-  styleEl.innerText = `body:not(.ratings-visible) .avg_rating,
-  body:not(.ratings-visible) .avg_rating_friends,
-  body:not(.ratings-visible) .track_rating,
-  body:not(.ratings-visible) .disco_avg_rating:not(.tm-visible) {
-    opacity: 0 !important;
-  }`;
+  const selectors = [
+    '.avg_rating',
+    '.avg_rating_friends',
+    '.track_rating',
+    '.disco_avg_rating:not(.tm-visible)',
+    '.review_rating',
+    '.catalog_rating',
+    '.catalog_rating_system_comment',
+    '.catalog_stats',
+    '.track_rating_hide > .tracks',
+  ];
+
+  let hideCSS = ''; // hide
+  let showCSS = ''; // show when active
+  selectors.forEach((selector, index) => {
+    if (index > 0) {
+      hideCSS += ', ';
+      showCSS += ', ';
+    }
+    hideCSS += `body:not(.ratings-visible) ${selector}`;
+    showCSS += `body:not(.ratings-visible) ${selector}:active`;
+  });
+  hideCSS += ' { opacity: 0 !important; }';
+  showCSS += ' { opacity: 1 !important; }';
+  
+  styleEl.innerText = `${hideCSS} ${showCSS}`;
+  // console.log(styleEl.innerText);
   document.documentElement.appendChild(styleEl);
 };
 
